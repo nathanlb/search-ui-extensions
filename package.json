@@ -11,7 +11,8 @@
         "./bin/es6/components/AttachResult/Strings.js",
         "./bin/es6/components/ResultsFilter/Strings.js",
         "./bin/es6/components/UserActions/Strings.js",
-        "./bin/es6/components/ViewedByCustomer/Strings.js"
+        "./bin/es6/components/ViewedByCustomer/Strings.js",
+        "./bin/es6/components/ViewedFilter/Strings.js"
     ],
     "scripts": {
         "test": "karma start ./config/karma.config.js --single-run",
