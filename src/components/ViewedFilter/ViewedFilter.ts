@@ -1,4 +1,5 @@
 import {
+    Component,
     ComponentOptions,
     IComponentBindings,
     $$,
@@ -6,9 +7,7 @@ import {
     Checkbox,
     load,
     l,
-    Facet,
     IFacetOptions,
-    ResponsiveFacets,
 } from 'coveo-search-ui';
 import { ViewedFilterEvents, IViewedFilterEventArgs } from './Events';
 import './Strings';
@@ -17,49 +16,31 @@ import './Strings';
  * Metadata sent when an analytics event is sent.
  */
 export interface IAnalyticsFilteredResultsMeta {
-    filteredResults: boolean;
+    hiddenResults: boolean;
 }
 
 /**
  * Possible options to configure the **ViewedFilter** component.
  */
 export interface IViewedFilterOptions extends IFacetOptions {
-    /** Specifies the text displayed next to the checkbox. */
-    text?: string;
-    /** The field on which to filter results using the values provided. */
-    field?: string;
-    /** The function that is called when retrieving uri hashes to filter. */
-    getValues?: () => string[];
+
 }
 
 /**
  * The ViewedFilter component allows a user to click a checkbox to
- * search only for matching results.
+ * hide certain results.
  */
-export class ViewedFilter extends Facet {
+export class ViewedFilter extends Component {
     static ID = 'ViewedFilter';
     private checkbox: Checkbox;
 
     static options: IViewedFilterOptions = {
-        text: ComponentOptions.buildStringOption({
-            defaultValue: l(`${ViewedFilter.ID}_Label`)
-        }),
-        field: ComponentOptions.buildStringOption({
-            defaultValue: 'urihash'
-        }),
-        getValues: ComponentOptions.buildCustomOption(name => () => new Array<string>(), {
-            defaultFunction: () => () => new Array<string>()
-        })
     };
 
     constructor(public element: HTMLElement, public options: IViewedFilterOptions, public bindings?: IComponentBindings) {
-        super(element, ComponentOptions.initComponentOptions(element, ViewedFilter, options), bindings, ViewedFilter.ID);
+        super(element, ViewedFilter.ID, bindings);
 
-        this.options.enableFacetSearch = false;
-        this.options.enableSettings = false;
-        this.options.includeInOmnibox = false;
-        this.options.enableMoreLess = false;
-        ResponsiveFacets.init(this.root, this, this.options);
+        this.options = ComponentOptions.initComponentOptions(element, ViewedFilter, options);
 
         this.initialize();
     }
@@ -78,10 +59,17 @@ export class ViewedFilter extends Facet {
 
     protected initialize(): void {
         const headerSection = $$('div', { className: 'coveo-facet-header' });
+        const headerTitleDiv = $$('div', {
+            className: 'coveo-facet-header-title',
+        }).el;
+        headerTitleDiv.innerHTML = l('ViewedFilterHeader_Label')
+        headerSection.append(headerTitleDiv);
+
+        const valueSection = $$('div', { className: 'coveo-facet-value' } );
         const labelDiv = $$('label', {
             className: 'coveo-facet-value-label-wrapper'
         }).el;
-        headerSection.append(labelDiv);
+        valueSection.append(labelDiv);
 
         this.createCheckbox().then(checkbox => {
             this.checkbox = checkbox;
@@ -89,15 +77,14 @@ export class ViewedFilter extends Facet {
         });
 
         this.element.append(headerSection.el);
-        console.log("pooooop")
-        console.log(this.element);
+        this.element.append(valueSection.el);
     }
 
     private async createCheckbox(): Promise<Checkbox> {
         if (Coveo.Checkbox === undefined) {
             await load('Checkbox');
         }
-        return new Checkbox(this.handleCheckboxChange.bind(this), this.options.text);
+        return new Checkbox(this.handleCheckboxChange.bind(this), l('ViewedByCustomerFilter_Label'));
     }
 
     private handleCheckboxChange(checkbox: Checkbox) {

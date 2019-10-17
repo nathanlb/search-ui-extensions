@@ -1,5 +1,8 @@
 import { Translation, Language } from '../../utils/translation';
 
 Translation.register(Language.English, {
-    ViewedFilter_Label: 'Unseen Results'
+    ViewedFilterHeader_Label: 'Hide results'
+});
+Translation.register(Language.English, {
+    ViewedByCustomerFilter_Label: 'Viewed by customer'
 });
