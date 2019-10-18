@@ -57,6 +57,7 @@
         "@types/jasmine": "^3.3.9",
         "@types/node": "^11.11.3",
         "@types/sinon": "^7.0.13",
+        "@types/underscore": "^1.9.3",
         "coveo-search-ui": "2.0.342",
         "coveo-search-ui-tests": "0.0.5",
         "coveralls": "^3.0.3",
@@ -79,6 +80,7 @@
         "ts-es5-istanbul-coverage": "^1.0.6",
         "ts-loader": "^6.0.0",
         "typescript": "^3.3.0",
+        "underscore": "^1.9.1",
         "webpack": "^4.29.6",
         "webpack-cli": "^3.2.3",
         "webpack-dev-server": "^3.2.1"
