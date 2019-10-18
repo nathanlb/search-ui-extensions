@@ -1,0 +1,16 @@
+@import '../../sass/Variables.scss';
+@import '../../sass/Text.scss';
+
+.CoveoViewedFilter {
+    border-top: thin solid #bcc3ca;
+    
+    .coveo-facet-value {
+        background-color: white;
+        opacity: 1;
+        padding: 5px 20px 7px 20px;
+
+        &:hover {
+            background-color: #e6ecf0;
+        }
+    }
+}
