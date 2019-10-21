@@ -4,6 +4,11 @@
 .CoveoViewedFilter {
     border-top: thin solid #bcc3ca;
     
+    .coveo-facet-header-title {
+        display: flex;
+        flex-grow: 1;
+    }
+    
     .coveo-facet-value {
         background-color: white;
         opacity: 1;

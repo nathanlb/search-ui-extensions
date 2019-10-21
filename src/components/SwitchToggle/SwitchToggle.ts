@@ -18,9 +18,11 @@ export interface ISwitchToggleOptions {
     }
 }
 
+// hide : <img src="https://img.icons8.com/material-outlined/50/000000/closed-eye.png">
+// show:  <img src="https://img.icons8.com/material-outlined/50/000000/visible.png">
+
 export class SwitchToggle implements IFormWidgetSettable {
     protected element: HTMLElement;
-    protected switch: HTMLInputElement;
     protected state: SwitchState;
 
     constructor(
@@ -48,14 +50,23 @@ export class SwitchToggle implements IFormWidgetSettable {
 
     public setValue( value: SwitchState ) {
         this.state = value;
+        this.styleChangeHandler(value);
         this.onChange(this);
+    }
+
+    protected styleChangeHandler( value: SwitchState) {
+        alert(value);
     }
 
     private buildContent() {
         const switchSection = $$('div', { className: 'coveo-switch-toggle', ariaLabel: this.options.ariaLabels.main});
+        const switchDiv = $$('div', { className: 'coveo-switch-center' });
         const leftButton = $$('button', { className: 'coveo-switch-toggle-left', ariaLabel: this.options.ariaLabels.left });
         const centerButton = $$('button', { className: 'coveo-switch-toggle-center', ariaLabel: this.options.ariaLabels.center });
         const rightButton = $$('button', { className: 'coveo-switch-toggle-right', ariaLabel: this.options.ariaLabels.right });
+
+        leftButton.el.innerHTML = '<img src="https://img.icons8.com/material-outlined/1d4f76/closed-eye.png">';
+        rightButton.el.innerHTML = '<img src="https://img.icons8.com/material-outlined/1d4f76/visible.png">';
 
         leftButton.on('click', () => {
             this.setValue(SwitchState.LEFT);
@@ -70,6 +81,7 @@ export class SwitchToggle implements IFormWidgetSettable {
         switchSection.append(leftButton.el);
         switchSection.append(centerButton.el);
         switchSection.append(rightButton.el);
+        switchSection.append(switchDiv.el);
         
         this.element = switchSection.el;
     }
