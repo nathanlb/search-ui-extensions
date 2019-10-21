@@ -5,7 +5,6 @@ import {
     $$,
     Initialization,
     Checkbox,
-    load,
     l,
     IQueryResult,
     IQueryResults,
@@ -17,6 +16,7 @@ import {
 } from 'coveo-search-ui';
 import { find } from 'underscore';
 import { ViewedFilterEvents, IViewedFilterEventArgs } from './Events';
+import { SwitchToggle, ISwitchToggleOptions, SwitchState } from '../SwitchToggle/SwitchToggle'
 import './Strings';
 
 /**
@@ -40,6 +40,7 @@ export interface IViewedFilterOptions extends ComponentOptions {
 export class ViewedFilter extends Component {
     static ID = 'ViewedFilter';
     private checkbox: Checkbox;
+    private switch: SwitchToggle;
     private resultList: ResultList;
 
     static options: IViewedFilterOptions = {};
@@ -58,7 +59,6 @@ export class ViewedFilter extends Component {
 
         this.queryStateModel.registerNewAttribute(QueryStateModel.getFacetId(ViewedFilter.ID), false);
         this.bind.onRootElement(QueryEvents.querySuccess, this.handleQuerySuccess.bind(this));
-        //this.bind.onQueryState('change:', QueryStateModel.getFacetId(ViewedFilter.ID), this.handleQueryStateChange.bind(this)); // ?
 
         this.initialize();
     }
@@ -76,11 +76,11 @@ export class ViewedFilter extends Component {
     }
 
     protected initialize(): void {
-        this.initPresentational();
-        this.findResultList();
+        this.buildContent();
+        this.getResultList();
     }
 
-    private initPresentational() {
+    private buildContent() {
         const headerSection = $$('div', { className: 'coveo-facet-header' });
         const headerTitleDiv = $$('div', { className: 'coveo-facet-header-title',}).el;
         headerTitleDiv.innerHTML = l('ViewedFilterHeader_Label')
@@ -92,23 +92,25 @@ export class ViewedFilter extends Component {
         }).el;
         valueSection.append(labelDiv);
 
-        this.createCheckbox().then(checkbox => {
-            this.checkbox = checkbox;
-            labelDiv.appendChild(this.checkbox.getElement());
-        });
+        this.switch = this.createSwitchToggle()
+        headerSection.append(this.switch.getElement());
 
         this.element.append(headerSection.el);
-        this.element.append(valueSection.el);
     }
 
-    private async createCheckbox(): Promise<Checkbox> {
-        if (Checkbox === undefined) {
-            await load('Checkbox');
+    private createSwitchToggle(): SwitchToggle {
+        const options: ISwitchToggleOptions = {
+            ariaLabels: {
+                main: 'Toggle visibility for results viewed by customer.',
+                left: 'Hide',
+                center: 'Show all',
+                right: 'Only show'
+            }
         }
-        return new Checkbox(this.handleCheckboxChange.bind(this), l('ViewedByCustomerFilter_Label'));
+        return new SwitchToggle( this.handleSwitchChange.bind(this), options);
     }
 
-    private findResultList() {
+    private getResultList() {
         const resultLists = $$(this.root).findAll(`.${Component.computeCssClassName(ResultList)}`).map(el => <ResultList>Component.get(el, ResultList));
         this.resultList = find(resultLists, resultList => !resultList.disabled);
     }
@@ -124,25 +126,24 @@ export class ViewedFilter extends Component {
         }
     }
 
-    private async handleCheckboxChange(checkbox: Checkbox) {
-        $$(this.root).trigger(ViewedFilterEvents.Click, { checked: this.checkbox.isSelected() } as IViewedFilterEventArgs);
-        this.findResultList();
+    private async handleSwitchChange(switchToggle: SwitchToggle) {
+        $$(this.root).trigger(ViewedFilterEvents.Click, { switchState: switchToggle.getValue() } as IViewedFilterEventArgs);
+        this.getResultList();
 
         if (this.resultList) {
-            await this.filterResults(this.resultList, checkbox.isSelected()).then( async filteredResults => {
+            await this.filterResults(this.resultList, this.switch.getValue()).then( async filteredResults => {
                 await this.resultList.renderResults(filteredResults);
-                console.log(this.resultList.getDisplayedResults());
             });
         }
     }
 
-    private async filterResults(resultList: ResultList, hideVBC: boolean) {
+    private async filterResults(resultList: ResultList, switchState: SwitchState) {
         const resultElements: HTMLElement[] = [];
         const results: IQueryResult[] = [...resultList.getDisplayedResults()];
         resultList.getDisplayedResults().length = 0;    // Empty list of displayed results
 
-        switch(hideVBC) {
-            case true:
+        switch(switchState) {
+            case SwitchState.LEFT:
                 await Promise.all(results.map( async result => {
                     if (!result.isUserActionView) {
                         await resultList.buildResult(result).then( builtResult => {
@@ -151,10 +152,18 @@ export class ViewedFilter extends Component {
                     }
                 }));
                 return resultElements;
-            case false:
+            case SwitchState.CENTER:
                 return await resultList.buildResults(this.allResults);
+            case SwitchState.RIGHT:
+                await Promise.all(results.map( async result => {
+                    if (result.isUserActionView) {
+                        await resultList.buildResult(result).then( builtResult => {
+                            resultElements.push(builtResult);
+                        });
+                    }
+                }));
+                return resultElements;
         }
-        
     }
 }
 

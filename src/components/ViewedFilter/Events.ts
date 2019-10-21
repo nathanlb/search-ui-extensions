@@ -1,3 +1,5 @@
+import { SwitchState } from "../SwitchToggle/SwitchToggle";
+
 /**
  * Events triggered by the **ViewedFilter** component.
  */
@@ -10,7 +12,7 @@ export enum ViewedFilterEvents {
  */
 export interface IViewedFilterEventArgs {
     /**
-     * Whether the filter is currently checked or not.
+     * State of the filter's toggle
      */
-    checked: boolean;
+    switchState: SwitchState;
 }
