@@ -8,7 +8,12 @@ import {
     load,
     l,
     IQueryResult,
-    ResultList
+    IQueryResults,
+    ResultList,
+    QueryStateModel,
+    QueryEvents,
+    Assert,
+    IQuerySuccessEventArgs
 } from 'coveo-search-ui';
 import { find } from 'underscore';
 import { ViewedFilterEvents, IViewedFilterEventArgs } from './Events';
@@ -37,8 +42,8 @@ export class ViewedFilter extends Component {
     private checkbox: Checkbox;
     private resultList: ResultList;
 
-    static options: IViewedFilterOptions = {
-    };
+    static options: IViewedFilterOptions = {};
+    private allResults: IQueryResults;
 
     /**
      * Create an instance of ViewedFilter
@@ -50,6 +55,10 @@ export class ViewedFilter extends Component {
         super(element, ViewedFilter.ID, bindings);
 
         this.options = ComponentOptions.initComponentOptions(element, ViewedFilter, options);
+
+        this.queryStateModel.registerNewAttribute(QueryStateModel.getFacetId(ViewedFilter.ID), false);
+        this.bind.onRootElement(QueryEvents.querySuccess, this.handleQuerySuccess.bind(this));
+        //this.bind.onQueryState('change:', QueryStateModel.getFacetId(ViewedFilter.ID), this.handleQueryStateChange.bind(this)); // ?
 
         this.initialize();
     }
@@ -104,31 +113,48 @@ export class ViewedFilter extends Component {
         this.resultList = find(resultLists, resultList => !resultList.disabled);
     }
 
+    private handleQuerySuccess(data: IQuerySuccessEventArgs) {
+        Assert.exists(data);
+        Assert.exists(data.results);
+        if (this.resultList) {
+            this.allResults = data.results;
+        }
+        else {
+            // TODO throw error
+        }
+    }
+
     private async handleCheckboxChange(checkbox: Checkbox) {
         $$(this.root).trigger(ViewedFilterEvents.Click, { checked: this.checkbox.isSelected() } as IViewedFilterEventArgs);
         this.findResultList();
 
         if (this.resultList) {
-            await this.filterResults(this.resultList).then( async filteredResults => {
-                if (filteredResults.length > 0) {
-                    await this.resultList.renderResults(filteredResults, false);
-                }
+            await this.filterResults(this.resultList, checkbox.isSelected()).then( async filteredResults => {
+                await this.resultList.renderResults(filteredResults);
+                console.log(this.resultList.getDisplayedResults());
             });
         }
     }
 
-    private async filterResults(resultList: ResultList) {
+    private async filterResults(resultList: ResultList, hideVBC: boolean) {
         const resultElements: HTMLElement[] = [];
-        const results: IQueryResult[] = resultList.getDisplayedResults();
-        console.log(this.resultList.getDisplayedResults());
-        await Promise.all(results.map( async result => {
-            if (!result.isUserActionView) {
-                await resultList.buildResult(result).then( builtResult => {
-                    resultElements.push(builtResult);
-                });
-            }
-        }));
-        return resultElements;
+        const results: IQueryResult[] = [...resultList.getDisplayedResults()];
+        resultList.getDisplayedResults().length = 0;    // Empty list of displayed results
+
+        switch(hideVBC) {
+            case true:
+                await Promise.all(results.map( async result => {
+                    if (!result.isUserActionView) {
+                        await resultList.buildResult(result).then( builtResult => {
+                            resultElements.push(builtResult);
+                        });
+                    }
+                }));
+                return resultElements;
+            case false:
+                return await resultList.buildResults(this.allResults);
+        }
+        
     }
 }
 
