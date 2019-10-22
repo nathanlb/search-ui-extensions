@@ -4,9 +4,9 @@ import {
 } from 'coveo-search-ui';
 
 export enum SwitchState {
-    LEFT,
-    CENTER,
-    RIGHT
+    LEFT = 'LEFT',
+    CENTER = 'CENTER',
+    RIGHT = 'RIGHT'
 }
 
 export interface ISwitchToggleOptions {
@@ -18,17 +18,17 @@ export interface ISwitchToggleOptions {
     }
 }
 
-// hide : <img src="https://img.icons8.com/material-outlined/50/000000/closed-eye.png">
-// show:  <img src="https://img.icons8.com/material-outlined/50/000000/visible.png">
-
 export class SwitchToggle implements IFormWidgetSettable {
     protected element: HTMLElement;
     protected state: SwitchState;
+    protected switchDiv: HTMLElement;
+    private iconColor = '1d4f76';
 
     constructor(
         public onChange: (switchToggle: SwitchToggle) => void = (switchToggle: SwitchToggle) => {},
         protected options: ISwitchToggleOptions
     ) {
+        this.state = SwitchState.CENTER;
         this.buildContent();
     }
 
@@ -49,24 +49,38 @@ export class SwitchToggle implements IFormWidgetSettable {
     }
 
     public setValue( value: SwitchState ) {
-        this.state = value;
         this.styleChangeHandler(value);
+        this.state = value;
         this.onChange(this);
     }
 
-    protected styleChangeHandler( value: SwitchState) {
-        alert(value);
+    protected styleChangeHandler( value: SwitchState ) {
+        this.switchDiv.classList.toggle(this.state);
+        this.switchDiv.classList.toggle(value);
     }
 
     private buildContent() {
-        const switchSection = $$('div', { className: 'coveo-switch-toggle', ariaLabel: this.options.ariaLabels.main});
-        const switchDiv = $$('div', { className: 'coveo-switch-center' });
-        const leftButton = $$('button', { className: 'coveo-switch-toggle-left', ariaLabel: this.options.ariaLabels.left });
-        const centerButton = $$('button', { className: 'coveo-switch-toggle-center', ariaLabel: this.options.ariaLabels.center });
-        const rightButton = $$('button', { className: 'coveo-switch-toggle-right', ariaLabel: this.options.ariaLabels.right });
+        const switchSection = $$('div', {
+            className: 'coveo-switch-toggle',
+            ariaLabel: this.options.ariaLabels.main
+        });
+        const leftButton = $$('button', {
+            className: 'coveo-switch-toggle-left',
+            ariaLabel: this.options.ariaLabels.left
+        });
+        const centerButton = $$('button', {
+            className: 'coveo-switch-toggle-center',
+            ariaLabel: this.options.ariaLabels.center
+        });
+        const rightButton = $$('button', {
+            className: 'coveo-switch-toggle-right',
+            ariaLabel: this.options.ariaLabels.right
+        });
+        this.switchDiv = $$('div', { className: 'coveo-switch' }).el;
+        this.switchDiv.classList.toggle(SwitchState.CENTER);
 
-        leftButton.el.innerHTML = '<img src="https://img.icons8.com/material-outlined/1d4f76/closed-eye.png">';
-        rightButton.el.innerHTML = '<img src="https://img.icons8.com/material-outlined/1d4f76/visible.png">';
+        leftButton.el.innerHTML = `<img src="https://img.icons8.com/material-outlined/${this.iconColor}/closed-eye.png">`;
+        rightButton.el.innerHTML = `<img src="https://img.icons8.com/material-outlined/${this.iconColor}/eye.png">`;
 
         leftButton.on('click', () => {
             this.setValue(SwitchState.LEFT);
@@ -81,7 +95,7 @@ export class SwitchToggle implements IFormWidgetSettable {
         switchSection.append(leftButton.el);
         switchSection.append(centerButton.el);
         switchSection.append(rightButton.el);
-        switchSection.append(switchDiv.el);
+        switchSection.append(this.switchDiv);
         
         this.element = switchSection.el;
     }

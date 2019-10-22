@@ -11,7 +11,7 @@ $search-ui-dark-blue: #1d4f76;
     flex-grow: 0;
     margin-top: 2px;
     background: $search-ui-light-gray;
-    border-radius: 25%;
+    border-radius: 8px;
     position: relative;
 
     button {
@@ -32,7 +32,7 @@ $search-ui-dark-blue: #1d4f76;
         }
     }
 
-    .coveo-switch-center {
+    .coveo-switch {
         background-color: $search-ui-dark-blue;
         border-color: $search-ui-white;
         border-width: 2px;
@@ -41,8 +41,20 @@ $search-ui-dark-blue: #1d4f76;
         height: 15px;
         border-radius: 50%;
         position: absolute;
-        left: 16px;
         margin: 0px 6px 0px 6px;
+        transition-duration: .1s;
+    }
+
+    .coveo-switch.LEFT {
+        left: -5px;
+    }
+
+    .coveo-switch.CENTER {
+        left: 16px;
+    }
+
+    .coveo-switch.RIGHT {
+        left: 38px;
     }
 
     .coveo-switch-toggle-center {
